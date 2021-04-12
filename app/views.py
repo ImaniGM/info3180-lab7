@@ -13,19 +13,6 @@ from .forms import UploadForm
 ###
 # Routing for your application.
 ###
-@app.route('/api/upload', methods=['POST'])
-def upload():
-    forM = UploadForm()
-    if request.method == 'POST':
-        if forM.validate_on_submit():
-            photoUpload = request.files['photo']
-            description = request.form['description']
-            filename = secure_filename(photoUpload.filename)
-            imageUpload.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return jsonify (  message= 'File Upload Successful', filename= photoUpload, description = description, status= 200)
-        else:
-            return jsonify (errors= (form_errors(UploadForm)), status=500)
-
 
 
 # Please create all new routes and view functions above this route.
@@ -42,6 +29,20 @@ def index(path):
     Also we will render the initial webpage and then let VueJS take control.
     """
     return render_template('index.html')
+
+@app.route('/api/upload', methods=['POST'])
+def upload():
+    forM = UploadForm()
+    if request.method == 'POST' and forM.validate_on_submit():
+        photoUpload = savePhoto(forM.photo.data)
+        description = forM.description.data
+        return jsonify (message= 'File Upload Successful', filename= photoUpload, description = description, status= 200)
+    else:
+        return jsonify (errors= (form_errors(UploadForm)), status=500)
+
+def savePhoto(photo):
+      fileN = secure_filename(photo.filename)
+      photo.save(os.path.join(app.config['UPLOAD_FOLDER'], fileN))
 
 
 # Here we define a function to collect form errors from Flask-WTF
@@ -86,7 +87,7 @@ def add_header(response):
 
 @app.errorhandler(404)
 def page_not_found(error):
-    """Custom 404 page."""
+    """Custom 404 page."""  
     return render_template('404.html'), 404
 
 
